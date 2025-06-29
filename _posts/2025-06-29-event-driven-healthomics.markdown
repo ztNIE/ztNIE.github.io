@@ -1,6 +1,6 @@
 ---
 layout: post
-title: "From Manual to Magic: How I Built a Fully Automated Genomic Analysis Pipeline with AWS HealthOmics and Event-Driven Architecture"
+title: "Manual to Magic: Building Automated Genomic Pipelines with AWS HealthOmics"
 date: 2025-06-23 21:40:43 +1000
 categories: blog
 ---
@@ -85,13 +85,13 @@ def lambda_handler(event, context):
                 ]
             send_email(client_email, subject, contents)
             return
-        
+
         # If input data has passed validation, start HealthOmics workflow
         response = start_healthomics(fastqs_uri, ids_uri, client_name, client_email, f"s3://{bucket}/{directory}/")
         if response["status"] in ["'STOPPING','COMPLETED','DELETED','CANCELLED','FAILED'"]:
             pass
             # Send Workflow Fail Email
-        
+
         # Send Workflow Start Email
         return
 
