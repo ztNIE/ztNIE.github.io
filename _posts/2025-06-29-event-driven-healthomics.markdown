@@ -4,6 +4,7 @@ title: "Manual to Magic: Building Automated Genomic Pipelines with AWS HealthOmi
 date: 2025-06-23 21:40:43 +1000
 categories: blog
 ---
+{% include google_tag.html %}
 
 ## Introduction
 

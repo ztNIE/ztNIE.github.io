@@ -4,7 +4,7 @@ title: "I Do a Little Bit of Everything: Life as a DevOps Engineer"
 date: 2025-06-13 21:40:43 +1000
 categories: blog
 ---
-
+{% include google_tag.html %}
 DevOps, a buzz word you may hear every day now. Along with Agile, it may have become the second most popular and ambiguous term in the Industry. I've been working as a DevOps Engineer for a year now, and I can only depict what "DevOps Engineer" really is by drafting the outlines.
 
   
