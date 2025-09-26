@@ -199,5 +199,3 @@ The combination of AWS HealthOmics and event-driven architecture proves that gen
 For genomics scientists hesitant about cloud adoption, remember that these AWS services are tools designed to amplify your existing expertise, not replace it. Your Nextflow workflows remain unchanged—they just run better, faster, and more reliably in the cloud.
 
 Start with one workflow, learn the patterns, and build confidence. The genomics industry is moving toward automated, cloud-native platforms, and the teams that embrace this transition early will have a significant competitive advantage. Your clients are already expecting faster, more reliable results—now you have the blueprint to deliver them.
-
-**Ready to transform your genomic analysis pipeline? Contact us to discuss how these same patterns can revolutionize your platform.**
