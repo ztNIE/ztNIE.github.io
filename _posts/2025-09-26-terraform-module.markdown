@@ -4,32 +4,35 @@ title: "The Lessons I Learnt in a Hard Way Building Terraform Modules"
 date: 2025-09-26 20:29:43 +1000
 categories: blog
 ---
-{% include google_tag.html %}
+<!-- {% include google_tag.html %} -->
 The principle of building good terraform modules is no different from building any good reusable code/modules in any other languages. There are some lessons that I learnt in the hard way and I'd like to share them here so you don't have to. 
 
 Hope these tips can help you.
 
 ## Start with the requirements and common scenarios first.  
 
-There is no way your module is going to cover EVERY scenario out there. If you'd like to do that, you might be better off just using vanilla terraform resources, because, to make it happen, I'm sure there will be some terraform _dark magic_ that takes a price.
+There is no way your module is going to cover EVERY scenario out there.  
 
-Instead, you can:
+Add an layer of abstraction means there must be some extra limitation It's unrealistic to expect a module to do everthing the vanilla terraform resources can.
+
+Therefore, instead of finding ways to cover all hypothetical scenarios which will lead everyone to nowhere, you can:
 
 1. Gather the requirements from the developers.  
 Understand the common scenarios they will be using the modules for.
 2. Aiming for 95% coverage of the scenarios.  
-you will have a much cleaner design, much smaller scope to work on and much __nicer__ first release.
+You will have a much cleaner design, much smaller scope to work on and much __nicer__ first release.
 3. Add more functionality to the modules gradually.  
-Everyone loves agile, right?
-
+In the good old agile way.
 
 ## Use the public modules when possible.  
 
 It's always tempting to re-invent the wheels, that's why everyone knows re-inventing wheels is bad but we're still doing it all the time.
 
-After you get the requirements and understand the scenarios, it's time to look if an existing module can serve you. Maybe all you need is to just figure out a set of vars to use for a public module.
+After you get the requirements and understand the scenarios, it's time to look if an existing module can serve you. Maybe all you need is figuring out how to use public modules and coming up with a set of good defaults.  
 
-We created our own VPC module. __Don't do that__, just use [one](https://registry.terraform.io/modules/terraform-aws-modules/vpc/aws/latest) of the thousand VPC modules out there.
+That sounds less exciting, but much faster and cost-effective to do.
+
+> We created our own VPC module. __Don't do that__, please use [one](https://registry.terraform.io/modules/terraform-aws-modules/vpc/aws/latest) of the thousand VPC modules out there.
 
 Some popular modules:
 1. [AWS official modules](https://registry.terraform.io/namespaces/terraform-aws-modules)
@@ -49,18 +52,22 @@ Think about:
 1. how each module will work with each other, which resource should belong to which module.
 2. Defining the vars and outputs of the modules before implementation, as if you're designing APIs. 
    
-It would save so much time from changing things back and forth.
+> We would have saved so much time if we invested in module design in the beginning.
 
 ## Beware of future breaking changes and one-way doors.
 
-We're aiming for a neat, clean, nice first release that dazzles developers, but be aware of the extensibility of the modules. There are certain decisions that's hard to change later, certain doors are only one-way.
+We're aiming for a neat, clean, nice first release that dazzles developers, but be aware of the extensibility of the modules. 
 
-> The definition for "breaking change" of the following discussion is: if a new release needs the user to _change_ their terraform template, like adding `moved, removed` resources, changing variable name, etc., it is a **breaking change**.  
+There are certain decisions that's hard to change later, certain doors are only one-way.
+
+> The definition for "breaking change" of the following discussion is: if a new release needs the user to _change_ their terraform template, like adding `moved, removed` resources, changing variable name, etc., it is a **breaking change**. 
+>  
 > A minor version release is a version user can safely bump up the number and get a `No changes.` from `terraform plan`.
 
 ### Future breaking changes:  
 
    1. Variable/output name or type change.  
+   Naming change sounds trivial, but it will requires users to update their terraform configuration, which makes it a __BREAKING CHANGE__.  
    i.e. From
        ```terraform
        variable "security_group_id" {
@@ -91,11 +98,11 @@ You can't use `variable` in `lifecycle` rules, which means you can't make a feat
 
 Only add `lifecycle` to your module if you're super confident and it's absolutely needed.
 
-Also there are some decisions looking like a big deal, but actually are **safe two-way doors**:
+There are also some decisions looking like a big deal, but actually are **safe two-way doors**:
 
 ### Two-way door: hard-coded default value in resources. 
 
-It's okay to not make a variable for every attribute in your module. If the developer is not likely to modify it, it's perfectly fine to make it a hard-coded value because it's only a minor release to upgrade that to variable.
+If the developer is not likely to modify an attribute, it's perfectly fine to make it a hard-coded value because it's only a minor release to upgrade that to variable.
 
 For example, say this is the release `v1.0.0`
 
@@ -121,15 +128,15 @@ resource "aws_resource" "example" {
 
 It's a safe minor change. The default value of `var_b` is still `value_b`, so users can safely bump version from `v1.0.0` to `v1.0.1` and will get a `No changes.` after upgrade.
 
-During our implementation, we spent hours on discussing if we could leave something as a hard-coded value, which will be any easy minor release in the future anyway; while greenlighted __one-way door__ without knowing wht it means. 
-
-There is a `prevent_destroy = true` for one of the resource, which has blocked us from having ephemeral environments and even ephemeral integration tests until now.
+> During our implementation, we spent hours on debating if we could leave something as a hard-coded value, which will be an easy minor release in the future anyway.  
+> 
+> At the same time, we greenlighted __one-way door__ `lifecycle` config without understanding its impact on future extensibility. 
 
 __Be careful of one-way doors.__
 
 
 ## Variable should have types WHENEVER possible.  
-   When I say "WHENEVER" I mean it literally. There are almost no good reasons for not having a type. No excuses, it must have types.   
+   When I say "WHENEVER" I mean it literally. There are almost no good reasons for not having a type.  
 
 ## Validation.  
 [Input validation](https://developer.hashicorp.com/terraform/language/block/variable#validation) is the key to make the modules more usable. If someone is not familiar with your code and is providing some variables won't work, it's better to let them know as early as possible.  
@@ -335,7 +342,7 @@ you run "terraform apply" now.
 ```
 
 
-> P.S. There is a reason why sometimes we can't just do
+> P.S. There is a reason why sometimes we can't just
 > ```terraform
 > resource "aws_s3_bucket" "example" {
 >   count  = var.s3_setting.bucket_name != null ? 1 : 0
@@ -347,16 +354,23 @@ Terraform needs to know the value of the var used in `count` or `for_each` befor
 ### Resource/Output post or pre condition
 You can also add [postcondition](https://developer.hashicorp.com/terraform/language/block/resource#postcondition) and [precondition](https://developer.hashicorp.com/terraform/language/block/resource#precondition) to the resources.
 
-I think these are generally more useful for end-users to add in root module level. If you'd like to add post/precondition checks, please be aware of the __one-way doors__ they will introduce.
+I think these are generally more useful for end-users to add in root module level, where user may have clearer requirements about what they want pre/post deployment.
+
+Also, since they are configured in `lifecycle` block, they are technically __one-way doors__.
 
 ## Tests.   
 [Terraform tests](https://developer.hashicorp.com/terraform/language/tests) is available in Terraform `v1.6.0` and later. We use `command = plan` for unit tests (triggered on every commit) and `command = apply` for integration tests (triggered on every release candidate).
 
-We started without unit tests and had a debate about if we need unit tests when our deadline is close. Investing on testing has proven to be a good investment. Having unit tests for our modules has significantly increased our velocity to develop the modules. Also, it makes it much easier for other developers to contribute to our modules.
+> Investing on testing has proven to be a good investment. Highly recommand even if you have a narrow timeframe.
+>
+> Having unit tests for our modules has significantly increased our velocity to develop the modules. 
+> 
+> It makes it much easier for other developers to contribute to our modules, which helped our goal for company-wide adoption.
 
 ## Documentation.  
 [Terraform docs](https://github.com/terraform-docs/terraform-docs) is pretty good. To make sure our doc is always up-to-date, we put a `diff` pipeline to trigger on every commit.
 
-The only caveat we had with `terraform docs` is the format -- `markdown table` is quite hard to read when the description of the variable becomes longer, although it looks more similar to most of terraform docs out there.  
-`markdown document` renders much better with the default markdown of our code repository.
+> The only caveat we had with `terraform docs` is the format -- `markdown table` is quite hard to read when the description of the variable becomes longer, although it looks more similar to most of terraform docs out there.  
+> 
+> `markdown document` renders much better with the default markdown of our code repository.
 
