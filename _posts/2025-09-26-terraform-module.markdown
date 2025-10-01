@@ -4,7 +4,7 @@ title: "The Lessons I Learnt in a Hard Way Building Terraform Modules"
 date: 2025-09-26 20:29:43 +1000
 categories: blog
 ---
-<!-- {% include google_tag.html %} -->
+{% include google_tag.html %}
 The principle of building good terraform modules is no different from building any good reusable code/modules in any other languages. There are some lessons that I learnt in the hard way and I'd like to share them here so you don't have to. 
 
 Hope these tips can help you.
