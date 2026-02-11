@@ -220,7 +220,7 @@ variable "aws_s3_bucket_name" {
     validation {
         # Just check if includes "_" as validation example
         condition     = !strcontains(var.aws_s3_bucket_name, "_")
-        error_message = "The S3 bucket name must include an underscore '_'."
+        error_message = "The S3 bucket name must not include an underscore '_'."
     }
 }
 ```
